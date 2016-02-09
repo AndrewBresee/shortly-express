@@ -98,8 +98,11 @@ app.get('/restricted', restrict, function(request, response){
 //Gets called when user clicks and navigates back to page. 
 app.get('/', 
 function(req, res) {
-  console.log("GOT A GET REQUEST FROM /!!");
-  res.render('index');
+  if(req.session.user){
+    res.render('index');
+  } else {
+    res.redirect('login');
+  }
 });
 
 app.get('/login', function(request, response) {
@@ -108,13 +111,11 @@ app.get('/login', function(request, response) {
 
 app.get('/create', 
 function(req, res) {
-  console.log("GOT A GET REQUEST FROM CREATE!!");
   res.render('index');
 });
 
 app.get('/links', 
 function(req, res) {
-   console.log("GOT A GET REQUEST FROM LINKS!!");
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -123,7 +124,6 @@ function(req, res) {
 
 app.post('/links', 
 function(req, res) {
-  console.log("req.session : ", req.session);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -174,7 +174,6 @@ app.post('/signup',
             }
           });
           req.session.user = username;  
-          console.log("req.session.user : ", req.session.user);
         //Investigate
         res.redirect('index');
       }
@@ -198,7 +197,6 @@ app.post('/login',
             }
           }); 
           req.session.user = username; 
-          console.log("req.session : ", req.session);
           res.redirect('index');   
         } else {
           console.log("WRONG!");
