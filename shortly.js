@@ -1,3 +1,13 @@
+//**TODO**
+//Only display links that that user has added
+//Not nav to login when loged in
+//Logout set sess to null, display all or none of the links
+//When entering links, save to users_links
+
+//Display username on page
+
+
+
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
@@ -14,6 +24,8 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+
+var sess = null; 
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -163,27 +175,34 @@ app.post('/signup',
 
 app.post('/login', 
   function(req,res){
-    var username = req.body.username;
-    var password = req.body.password;
+    if(sess === null){
+      var username = req.body.username;
+      var password = req.body.password;
 
-    //Make this look at username.  
-    User.where('name', username).fetch().then(function(user){
-      var storedPassword = user.attributes.password;
-      bcrypt.compare(password, storedPassword, function(err, match){
-        console.log("Password : ", password);
-        console.log("storedPassword : ", storedPassword);
-        if(match){
-          console.log("YOU ARE IN!!"); 
-          res.redirect('index');   
-        } else {
-          console.log("WRONG!");
-          //res.redirect('signup');
-          res.send(309);
-        }
+      //Make this look at username.  
+      User.where('name', username).fetch().then(function(user){
+        var storedPassword = user.attributes.password;
+        bcrypt.compare(password, storedPassword, function(err, match){
+          console.log("Password : ", password);
+          console.log("storedPassword : ", storedPassword);
+          if(match){
+            sess = req.session;
+            sess.user = username; 
+            console.log("req.session " , req.session); 
+            res.redirect('index');   
+          } else {
+            console.log("WRONG!");
+            //res.redirect('signup');
+            res.send(309);
+          }
+        });
+      }).catch(function(err){
+        console.log(err);
       });
-    }).catch(function(err){
-      console.log(err);
-    });
+    } else {
+      console.log(sess);
+      res.redirect('index');
+    }
   }
 );
 
