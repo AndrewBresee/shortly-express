@@ -22,6 +22,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var Users_Links = require('./app/models/users_links');
 
 var app = express();
 
@@ -152,6 +153,26 @@ function(req, res) {
       });
     }
   });
+
+  var username = req.session.user; 
+  var userId; 
+  var urlId; 
+
+  User.where({name: username}).fetch().then(function(user){
+    userId =  user.attributes.id;
+  });
+
+  Link.where({url: uri}).fetch().then(function(url){
+    urlId =  url.attributes.id;
+  });
+
+ new Users_Links({ linkId : urlId, userId : userId });    
+
+  Users_Linkses.create({
+    linkId: "1",
+    userId: "1 "
+  });     
+
 });
 
 app.post('/signup', 
