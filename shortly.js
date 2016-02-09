@@ -98,29 +98,38 @@ app.get('/restricted', restrict, function(request, response){
 
 
 //Gets called when user clicks and navigates back to page. 
-app.get('/', 
+app.get('/', restrict,
 function(req, res) {
-  if(req.session.user){
     res.render('index');
-  } else {
-    res.redirect('login');
-  }
 });
 
 app.get('/login', function(request, response) {
   res.render('login');
 });
 
-app.get('/create', 
+app.get('/create', restrict, 
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links', restrict, 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
+  var username = req.session.user;
+  var userId; 
+  User.where({name: username }).fetch().then(function(user){
+    userId =  user.attributes.id;
+
+    Users_Linkses.fetch().then(function(links){
+      
+      res.send(200);
+    }); 
+
   });
+  
+  // Links.reset().fetch().then(function(links) {
+  //   console.log("links.models : ", links.models);
+  //   res.send(200, links.models);
+  // });
 });
 
 
@@ -159,12 +168,10 @@ function(req, res) {
           Link.where({url: uri}).fetch().then(function(url){
             if(url) {
               urlId =  url.attributes.id;
-              console.log("The url id: ", urlId);
             } else {
               console.log("No! The url id was not found.");
             }
           });
-          console.log("ID", userId, urlId);
           new Users_Links({ linkId : urlId, userId : userId });    
 
           Users_Linkses.create({
