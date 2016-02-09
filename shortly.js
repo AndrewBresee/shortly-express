@@ -23,6 +23,7 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 var Users_Links = require('./app/models/users_links');
+var Users_Linkses = require('./app/collections/users_linkses');
 
 var app = express();
 
@@ -126,6 +127,11 @@ function(req, res) {
 app.post('/links', 
 function(req, res) {
   var uri = req.body.url;
+  var username = req.session.user; 
+  var userId;
+  User.where({name: username}).fetch().then(function(user){
+    userId =  user.attributes.id;
+  });
 
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
@@ -147,31 +153,30 @@ function(req, res) {
           title: title,
           baseUrl: req.headers.origin
         })
-        .then(function(newLink) {
-          res.send(200, newLink);
+        .then(function(newLink) { 
+          var urlId = newLink.attributes.id; 
+
+          Link.where({url: uri}).fetch().then(function(url){
+            if(url) {
+              urlId =  url.attributes.id;
+              console.log("The url id: ", urlId);
+            } else {
+              console.log("No! The url id was not found.");
+            }
+          });
+          console.log("ID", userId, urlId);
+          new Users_Links({ linkId : urlId, userId : userId });    
+
+          Users_Linkses.create({
+            linkId: urlId,
+            userId: userId
+          });
+
+          res.send(200, newLink);     
         });
       });
     }
   });
-
-  var username = req.session.user; 
-  var userId; 
-  var urlId; 
-
-  User.where({name: username}).fetch().then(function(user){
-    userId =  user.attributes.id;
-  });
-
-  Link.where({url: uri}).fetch().then(function(url){
-    urlId =  url.attributes.id;
-  });
-
- new Users_Links({ linkId : urlId, userId : userId });    
-
-  Users_Linkses.create({
-    linkId: "1",
-    userId: "1 "
-  });     
 
 });
 
