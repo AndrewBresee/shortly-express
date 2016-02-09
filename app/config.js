@@ -35,9 +35,36 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
   }
 });
 
+db.knex.schema.hasTable('users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function (user) {
+      user.increments('id').primary();
+      user.string('name', 100);
+      user.string('password', 100); 
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
+db.knex.schema.hasTable('users_links').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users_links', function (users_links) {
+      users_links.increments('id').primary();
+      users_links.integer('linkId');
+      users_links.integer('userId'); 
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
+
 /************************************************************/
 // Add additional schema definitions below
 /************************************************************/
-
+// Define a table for users
+// Each user has one password
+// Each user has many links, each link has many users
 
 module.exports = db;

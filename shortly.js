@@ -23,25 +23,31 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
+//Gets called when user clicks and navigates back to page. 
 app.get('/', 
 function(req, res) {
+  console.log("GOT A GET REQUEST FROM /!!");
   res.render('index');
 });
 
 app.get('/create', 
 function(req, res) {
+  console.log("GOT A GET REQUEST FROM CREATE!!");
   res.render('index');
 });
 
 app.get('/links', 
 function(req, res) {
+   console.log("GOT A GET REQUEST FROM LINKS!!");
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
+
 app.post('/links', 
 function(req, res) {
+  console.log("GOT A POST REQUEST!!");
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
