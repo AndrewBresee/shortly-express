@@ -143,7 +143,7 @@ function(req, res) {
 app.post('/signup', 
   function(req,res){
     var username = req.body.username;
-    var password = req.body.password;
+    var password = bcrypt.hashSync(req.body.password);
     new User({name: username}).fetch().then(function(found){
       if(found){
         res.redirect('signup');
