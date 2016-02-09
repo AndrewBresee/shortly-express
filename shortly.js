@@ -35,14 +35,16 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+var SessionStore = require('express-mysql-session');
 
-app.use(cookieParser());
+// app.use(cookieParser());
 
 app.use(session({
   secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
+  expire: false
+  // resave: false,
+  // saveUninitialized: true,
+  // cookie: { secure: true }
 }));
 
 // ***Make an authentication check using restrict***
@@ -121,7 +123,7 @@ function(req, res) {
 
 app.post('/links', 
 function(req, res) {
-  console.log("GOT A POST REQUEST!!");
+  console.log("req.session : ", req.session);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -165,7 +167,14 @@ app.post('/signup',
         Users.create({
           name: username,
           password: password
-        }); 
+        });
+        req.session.regenerate(function(err){
+            if(err){
+              console.log(err); 
+            }
+          });
+          req.session.user = username;  
+          console.log("req.session.user : ", req.session.user);
         //Investigate
         res.redirect('index');
       }
@@ -175,36 +184,32 @@ app.post('/signup',
 
 app.post('/login', 
   function(req,res){
-    if(sess === null){
-      var username = req.body.username;
-      var password = req.body.password;
+    var username = req.body.username;
+    var password = req.body.password;
 
-      //Make this look at username.  
-      User.where('name', username).fetch().then(function(user){
-        var storedPassword = user.attributes.password;
-        bcrypt.compare(password, storedPassword, function(err, match){
-          console.log("Password : ", password);
-          console.log("storedPassword : ", storedPassword);
-          if(match){
-            sess = req.session;
-            sess.user = username; 
-            console.log("req.session " , req.session); 
-            res.redirect('index');   
-          } else {
-            console.log("WRONG!");
-            //res.redirect('signup');
-            res.send(309);
-          }
-        });
-      }).catch(function(err){
-        console.log(err);
+    //Make this look at username.  
+    User.where('name', username).fetch().then(function(user){
+      var storedPassword = user.attributes.password;
+      bcrypt.compare(password, storedPassword, function(err, match){
+        if(match){
+          req.session.regenerate(function(err){
+            if(err){
+              console.log(err); 
+            }
+          }); 
+          req.session.user = username; 
+          console.log("req.session : ", req.session);
+          res.redirect('index');   
+        } else {
+          console.log("WRONG!");
+          //res.redirect('signup');
+          res.send(309);
+        }
       });
-    } else {
-      console.log(sess);
-      res.redirect('index');
-    }
-  }
-);
+    }).catch(function(err){
+      console.log(err);
+    });
+});
 
 /************************************************************/
 // Write your authentication routes here
