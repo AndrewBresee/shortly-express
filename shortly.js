@@ -2,6 +2,8 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -21,6 +23,60 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(cookieParser());
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true }
+}));
+
+
+
+// ***Make an authentication check using restrict***
+function restrict(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
+}
+
+app.get('/login', function(request, response) {
+  console.log("Navigated to login");
+  response.render('login');
+});
+
+app.post('/login', function(request, response) {
+ 
+    var username = request.body.username;
+    var password = request.body.password;
+ 
+    if(username == 'demo' && password == 'demo'){
+        request.session.regenerate(function(){
+        request.session.user = username;
+        response.redirect('/restricted');
+        });
+    }
+    else {
+       res.redirect('login');
+    }    
+});
+
+
+app.get('/logout', function(request, response){
+    request.session.destroy(function(){
+        response.redirect('/');
+    });
+});
+ 
+app.get('/restricted', restrict, function(request, response){
+  response.send('This is the restricted area! Hello ' + request.session.user + '! click <a href="/logout">here to logout</a>');
+});
+ 
+
 
 
 //Gets called when user clicks and navigates back to page. 
@@ -28,6 +84,10 @@ app.get('/',
 function(req, res) {
   console.log("GOT A GET REQUEST FROM /!!");
   res.render('index');
+});
+
+app.get('/login', function(request, response) {
+  res.render('login');
 });
 
 app.get('/create', 
