@@ -4,7 +4,7 @@ var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -25,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 app.use(cookieParser());
+
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
@@ -43,7 +44,6 @@ function restrict(req, res, next) {
 }
 
 app.get('/login', function(request, response) {
-  console.log("Navigated to login");
   response.render('login');
 });
 
@@ -51,21 +51,21 @@ app.get('/signup', function(request, response) {
   response.render('signup');
 });
 
-app.post('/login', function(request, response) {
+// app.post('/login', function(request, response) {
  
-    var username = request.body.username;
-    var password = request.body.password;
+//     var username = request.body.username;
+//     var password = request.body.password;
  
-    if(username == 'demo' && password == 'demo'){
-        request.session.regenerate(function(){
-        request.session.user = username;
-        response.redirect('/restricted');
-        });
-    }
-    else {
-       res.redirect('login');
-    }    
-});
+//     if(username == 'demo' && password == 'demo'){
+//         request.session.regenerate(function(){
+//         request.session.user = username;
+//         response.redirect('/restricted');
+//         });
+//     }
+//     else {
+//        res.redirect('login');
+//     }    
+// });
 
 
 app.get('/logout', function(request, response){
@@ -146,15 +146,44 @@ app.post('/signup',
     var password = req.body.password;
     new User({name: username}).fetch().then(function(found){
       if(found){
+        res.redirect('signup');
         res.send(200, found.attributes);
+        //TODO: Append error. 
       } else {
         Users.create({
           name: username,
           password: password
         }); 
+        //Investigate
         res.redirect('index');
       }
     }); 
+  }
+);
+
+app.post('/login', 
+  function(req,res){
+    var username = req.body.username;
+    var password = req.body.password;
+
+    //Make this look at username.  
+    User.where('name', username).fetch().then(function(user){
+      var storedPassword = user.attributes.password;
+      bcrypt.compare(password, storedPassword, function(err, match){
+        console.log("Password : ", password);
+        console.log("storedPassword : ", storedPassword);
+        if(match){
+          console.log("YOU ARE IN!!"); 
+          res.redirect('index');   
+        } else {
+          console.log("WRONG!");
+          //res.redirect('signup');
+          res.send(309);
+        }
+      });
+    }).catch(function(err){
+      console.log(err);
+    });
   }
 );
 
