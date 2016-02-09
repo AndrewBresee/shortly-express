@@ -23,16 +23,14 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-app.use(cookieParser());
 
+app.use(cookieParser());
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }
 }));
-
-
 
 // ***Make an authentication check using restrict***
 function restrict(req, res, next) {
@@ -47,6 +45,10 @@ function restrict(req, res, next) {
 app.get('/login', function(request, response) {
   console.log("Navigated to login");
   response.render('login');
+});
+
+app.get('/signup', function(request, response) {
+  response.render('signup');
 });
 
 app.post('/login', function(request, response) {
@@ -137,6 +139,24 @@ function(req, res) {
     }
   });
 });
+
+app.post('/signup', 
+  function(req,res){
+    var username = req.body.username;
+    var password = req.body.password;
+    new User({name: username}).fetch().then(function(found){
+      if(found){
+        res.send(200, found.attributes);
+      } else {
+        Users.create({
+          name: username,
+          password: password
+        }); 
+        res.redirect('index');
+      }
+    }); 
+  }
+);
 
 /************************************************************/
 // Write your authentication routes here

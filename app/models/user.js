@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 var Users_Links = require('./users_links.js');
 
 var User = db.Model.extend({
-  tableName: 'users_links',
+  tableName: 'users',
   name: 'name',
   password: 'password',
   users_links: function() {
