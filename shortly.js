@@ -114,23 +114,37 @@ function(req, res) {
 
 app.get('/links', restrict, 
 function(req, res) {
-  
+
   var username = req.session.user;
   var userId; 
+  var linkObjs;
   User.where({name: username }).fetch().then(function(user){
     userId =  user.attributes.id;
-
-    Users_Linkses.fetch().then(function(links){
+    var linksStore = [];
+    Links.reset().fetch().then(function(links) {
+      linkObjs = links.models;
+      Users_Linkses.fetch().then(function(links_users){
+        var luObjs = links_users.models;
+        luObjs.forEach(function(user_link) {
+          if(user_link.attributes.userId === userId) {
+            var linkId = user_link.attributes.linkId;
+            linkObjs.forEach(function(specificLink){
+              if(specificLink.attributes.id === linkId){
+                linksStore.push(specificLink);
+              }
+            });
+            
+          }
+        });
+        res.send(200, linksStore);
+      }); 
       
-      res.send(200);
-    }); 
+    });
+
 
   });
   
-  Links.reset().fetch().then(function(links) {
-    console.log("links.models : ", links.models);
-    res.send(200, links.models);
-  });
+  
 });
 
 
