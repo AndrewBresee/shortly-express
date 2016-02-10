@@ -67,22 +67,6 @@ app.get('/signup', function(request, response) {
   response.render('signup');
 });
 
-// app.post('/login', function(request, response) {
- 
-//     var username = request.body.username;
-//     var password = request.body.password;
- 
-//     if(username == 'demo' && password == 'demo'){
-//         request.session.regenerate(function(){
-//         request.session.user = username;
-//         response.redirect('/restricted');
-//         });
-//     }
-//     else {
-//        res.redirect('login');
-//     }    
-// });
-
 
 app.get('/logout', function(request, response){
     request.session.destroy(function(){
@@ -164,6 +148,17 @@ function(req, res) {
 
   new Link({ url: uri }).fetch().then(function(found) {
     if (found) {
+      console.log("FOUND: ", found);
+      var urlId = found.attributes.id;
+
+      new Users_Links({ linkId : urlId, userId : userId }).fetch().then(function(found){
+        if(!found){
+          Users_Linkses.create({
+            linkId: urlId,
+            userId: userId
+          });
+        } 
+      });    
       res.send(200, found.attributes);
     } else {
       util.getUrlTitle(uri, function(err, title) {
