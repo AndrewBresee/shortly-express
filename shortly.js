@@ -114,6 +114,7 @@ function(req, res) {
 
 app.get('/links', restrict, 
 function(req, res) {
+  
   var username = req.session.user;
   var userId; 
   User.where({name: username }).fetch().then(function(user){
@@ -126,10 +127,10 @@ function(req, res) {
 
   });
   
-  // Links.reset().fetch().then(function(links) {
-  //   console.log("links.models : ", links.models);
-  //   res.send(200, links.models);
-  // });
+  Links.reset().fetch().then(function(links) {
+    console.log("links.models : ", links.models);
+    res.send(200, links.models);
+  });
 });
 
 
